@@ -1,7 +1,8 @@
-import { Button, GestureResponderEvent } from "react-native";
+import { Button } from "react-native";
 import { CalculatorDisplay } from "../components/CalculatorDisplay";
 import { useState } from "react";
 import _ from "lodash";
+import { Snackbar } from "react-native-paper";
 
 enum SignEnum {
   plus = "+",
@@ -14,6 +15,10 @@ type Sign = "/" | "*" | "-" | "+";
 
 export const HomeScreen = () => {
   const [text, setText] = useState("");
+  const [snackbarState, setSnackbarState] = useState<{
+    text: string;
+    isVisible: boolean;
+  }>({ text: "", isVisible: false });
 
   const calculateResult = (text: string): string => {
     return eval(text);
@@ -37,13 +42,35 @@ export const HomeScreen = () => {
     return typeof val === "string" && signs.includes(val);
   };
 
+  const replaceLastSymbolWith = (text: string, val: string): string => {
+    const withoutLastChar = removeLastChar(text);
+    console.log(withoutLastChar);
+
+    return withoutLastChar.concat(val);
+  };
+
+  const endsWithSignAndZero = (text: string): boolean => {
+    const result = Object.values(SignEnum).some((sign) =>
+      text.endsWith(`${sign}0`)
+    );
+    console.log(result);
+
+    return result;
+  };
+
   const onButtonClick = (input: string) => {
     if (input === "C") {
       setText("");
     } else if (input === "=") {
       if (!_.isEmpty(text)) {
-        console.log("equals if");
-
+        if (_.isEqual(text, "0/0")) {
+          setSnackbarState({ isVisible: true, text: "Invalid operation" });
+          return;
+        }
+        if (text.endsWith("/0")) {
+          setSnackbarState({ isVisible: true, text: "Cannot divide by zero" });
+          return;
+        }
         let finalText = text;
 
         if (endsWithSign(text)) finalText = removeLastChar(text);
@@ -53,8 +80,6 @@ export const HomeScreen = () => {
         setText(result);
       }
     } else if (isSign(input)) {
-      console.log("sign if");
-
       const textString = text.toString();
       if (!endsWithSign(textString) && !_.isEmpty(textString))
         setText(textString.concat(input));
@@ -62,6 +87,13 @@ export const HomeScreen = () => {
       if (!_.isString(text)) {
         setText(input);
       } else {
+        if (endsWithSignAndZero(text) && input === "0") return;
+        if (text === "0") return;
+        const numbers = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
+        if (endsWithSignAndZero(text) && numbers.includes(input)) {
+          setText(replaceLastSymbolWith(text, input));
+          return;
+        }
         setText(text.concat(input));
       }
     }
@@ -86,6 +118,15 @@ export const HomeScreen = () => {
       <Button title="/" onPress={() => onButtonClick("/")} />
       <Button title="=" onPress={() => onButtonClick("=")} />
       <Button title="C" onPress={() => onButtonClick("C")} />
+      <Snackbar
+        visible={snackbarState.isVisible}
+        onDismiss={() =>
+          setSnackbarState({ ...snackbarState, isVisible: false })
+        }
+        duration={1000}
+      >
+        {snackbarState.text}
+      </Snackbar>
     </>
   );
 };

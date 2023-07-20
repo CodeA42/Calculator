@@ -4,6 +4,7 @@ import { StatusBar } from "expo-status-bar";
 import { StyleSheet, Text, View, Button } from "react-native";
 import * as React from "react";
 import { HomeScreen } from "./pages/HomeScreen";
+import { registerRootComponent } from "expo";
 
 const Stack = createNativeStackNavigator();
 
@@ -34,3 +35,5 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
 });
+
+registerRootComponent(App);
