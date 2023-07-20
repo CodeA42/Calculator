@@ -44,8 +44,6 @@ export const HomeScreen = () => {
 
   const replaceLastSymbolWith = (text: string, val: string): string => {
     const withoutLastChar = removeLastChar(text);
-    console.log(withoutLastChar);
-
     return withoutLastChar.concat(val);
   };
 
@@ -53,7 +51,6 @@ export const HomeScreen = () => {
     const result = Object.values(SignEnum).some((sign) =>
       text.endsWith(`${sign}0`)
     );
-    console.log(result);
 
     return result;
   };
