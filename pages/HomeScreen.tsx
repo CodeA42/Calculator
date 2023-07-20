@@ -1,32 +1,68 @@
 import { Button, GestureResponderEvent } from "react-native";
 import { CalculatorDisplay } from "../components/CalculatorDisplay";
 import { useState } from "react";
+import _ from "lodash";
+
+enum SignEnum {
+  plus = "+",
+  minus = "-",
+  divide = "*",
+  multiply = "/",
+}
+
+type Sign = "/" | "*" | "-" | "+";
 
 export const HomeScreen = () => {
   const [text, setText] = useState("");
 
   const calculateResult = (text: string): string => {
-    let result = eval(text);
-    return result;
+    return eval(text);
   };
 
-  const onButtonClick = (e: string) => {
-    if (e === "C") {
-      setText("");
-    } else if (e === "=") {
-      setText(calculateResult(text));
-    } else {
-      console.log(text);
+  const removeLastChar = (text: string): string => {
+    return text.slice(0, -1);
+  };
 
-      if (
-        !(
-          text.endsWith("+") ||
-          text.endsWith("-") ||
-          text.endsWith("/") ||
-          text.endsWith("*")
-        )
-      ) {
-        setText(text.concat(e));
+  const getLastChar = (text: string): string => {
+    return text.slice(-1);
+  };
+
+  const endsWithSign = (val: string): boolean => {
+    const lastChar = getLastChar(val);
+    return isSign(lastChar);
+  };
+
+  const isSign = (val: any): val is Sign => {
+    const signs = Object.values<string>(SignEnum);
+    return typeof val === "string" && signs.includes(val);
+  };
+
+  const onButtonClick = (input: string) => {
+    if (input === "C") {
+      setText("");
+    } else if (input === "=") {
+      if (!_.isEmpty(text)) {
+        console.log("equals if");
+
+        let finalText = text;
+
+        if (endsWithSign(text)) finalText = removeLastChar(text);
+
+        const result = calculateResult(finalText).toString();
+
+        setText(result);
+      }
+    } else if (isSign(input)) {
+      console.log("sign if");
+
+      const textString = text.toString();
+      if (!endsWithSign(textString) && !_.isEmpty(textString))
+        setText(textString.concat(input));
+    } else {
+      if (!_.isString(text)) {
+        setText(input);
+      } else {
+        setText(text.concat(input));
       }
     }
   };
