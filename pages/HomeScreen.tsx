@@ -3,6 +3,7 @@ import { CalculatorDisplay } from "../components/CalculatorDisplay";
 import { useState } from "react";
 import _ from "lodash";
 import { Snackbar } from "react-native-paper";
+import Icon from "react-native-vector-icons/Feather";
 
 enum SignEnum {
   plus = "+",
@@ -32,6 +33,19 @@ export const HomeScreen = () => {
     return text.slice(-1);
   };
 
+  const getTextAfterLastSign = (text: string): string => {
+    const splitResult = text.split(/[\+,\-,\*,\/]/);
+    return splitResult[splitResult.length - 1];
+  };
+
+  const hasValAfterLastSign = (text: string, val: string) => {
+    return getTextAfterLastSign(text).includes(val);
+  };
+
+  const hasDotAfterLastSign = (text: string) => {
+    return hasValAfterLastSign(text, ".");
+  };
+
   const endsWithSign = (val: string): boolean => {
     const lastChar = getLastChar(val);
     return isSign(lastChar);
@@ -56,7 +70,18 @@ export const HomeScreen = () => {
   };
 
   const onButtonClick = (input: string) => {
-    if (input === "C") {
+    if (input === ".") {
+      if (
+        text.endsWith(".") ||
+        endsWithSign(text) ||
+        _.isEmpty(text) ||
+        hasDotAfterLastSign(text)
+      )
+        return;
+      setText(text.concat(input));
+    } else if (input === "delete") {
+      if (text.length > 0) setText(removeLastChar(text));
+    } else if (input === "C") {
       setText("");
     } else if (input === "=") {
       if (!_.isEmpty(text)) {
@@ -115,6 +140,13 @@ export const HomeScreen = () => {
       <Button title="/" onPress={() => onButtonClick("/")} />
       <Button title="=" onPress={() => onButtonClick("=")} />
       <Button title="C" onPress={() => onButtonClick("C")} />
+      <Button title="." onPress={() => onButtonClick(".")} />
+      <Icon.Button
+        name="delete"
+        onPress={() => {
+          onButtonClick("delete");
+        }}
+      ></Icon.Button>
       <Snackbar
         visible={snackbarState.isVisible}
         onDismiss={() =>
