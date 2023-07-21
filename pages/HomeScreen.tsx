@@ -5,14 +5,14 @@ import _ from "lodash";
 import { Snackbar } from "react-native-paper";
 import Icon from "react-native-vector-icons/Feather";
 
-enum SignEnum {
+enum OperatorEnum {
   plus = "+",
   minus = "-",
   divide = "*",
   multiply = "/",
 }
 
-type Sign = "/" | "*" | "-" | "+";
+type Operator = "/" | "*" | "-" | "+";
 
 export const HomeScreen = () => {
   const [text, setText] = useState("");
@@ -33,26 +33,35 @@ export const HomeScreen = () => {
     return text.slice(-1);
   };
 
-  const getTextAfterLastSign = (text: string): string => {
+  const getTextAfterLastOperator = (text: string): string => {
     const splitResult = text.split(/[\+,\-,\*,\/]/);
     return splitResult[splitResult.length - 1];
   };
 
+  const getTextAfterLastSign = (text: string): string => {
+    const splitResult = splitByAllSigns(text);
+    return splitResult[splitResult.length - 1];
+  };
+
+  const splitByAllSigns = (text: string): string[] => {
+    return text.split(/[\+,\-,\*,\/,\(,\)]/);
+  };
+
   const hasValAfterLastSign = (text: string, val: string) => {
-    return getTextAfterLastSign(text).includes(val);
+    return getTextAfterLastOperator(text).includes(val);
   };
 
   const hasDotAfterLastSign = (text: string) => {
     return hasValAfterLastSign(text, ".");
   };
 
-  const endsWithSign = (val: string): boolean => {
+  const endsWithOperator = (val: string): boolean => {
     const lastChar = getLastChar(val);
-    return isSign(lastChar);
+    return isOperator(lastChar);
   };
 
-  const isSign = (val: any): val is Sign => {
-    const signs = Object.values<string>(SignEnum);
+  const isOperator = (val: any): val is Operator => {
+    const signs = Object.values<string>(OperatorEnum);
     return typeof val === "string" && signs.includes(val);
   };
 
@@ -61,19 +70,61 @@ export const HomeScreen = () => {
     return withoutLastChar.concat(val);
   };
 
-  const endsWithSignAndZero = (text: string): boolean => {
-    const result = Object.values(SignEnum).some((sign) =>
-      text.endsWith(`${sign}0`)
-    );
+  const endsWithOperatorAndZero = (text: string): boolean => {
+    return endsWithOperatorAnd(text, "0");
+  };
 
+  const endsWithOperatorAnd = (text: string, val: string): boolean => {
+    const result = Object.values(OperatorEnum).some((operator) =>
+      text.endsWith(`${operator}${val}`)
+    );
     return result;
   };
 
+  const endsWithSignAndOpenBracket = (text: string) => {
+    return endsWithOperatorAnd(text, "(");
+  };
+
+  const countOccurencesOfSubstring = (text: string, val: string) => {
+    return text.split(val).length - 1;
+  };
+
+  const hasOpenBracket = (text: string): boolean => {
+    const numberOfOpenBrackets = countOccurencesOfSubstring(text, "(");
+    const numberOfClosedBrackets = countOccurencesOfSubstring(text, ")");
+
+    return numberOfOpenBrackets > numberOfClosedBrackets;
+  };
+
+  const endsWithNumber = (text: string): boolean => {
+    const lastText = getTextAfterLastSign(text);
+    return text.endsWith(lastText);
+  };
+
+  const closeBrackets = (text: string): string => {};
+
   const onButtonClick = (input: string) => {
-    if (input === ".") {
+    if (input === "()") {
+      if (endsWithSignAndOpenBracket(text)) return;
+      if (endsWithOperator(text)) {
+        setText(text.concat("("));
+      } else if (endsWithNumber(text)) {
+        if (hasOpenBracket(text)) {
+          setText(text.concat(")"));
+        } else {
+          setText(text.concat("*("));
+        }
+      } else if (text.endsWith(")")) {
+        if (hasOpenBracket(text)) {
+          setText(text.concat(")"));
+        } else if (!hasOpenBracket(text)) {
+          return;
+        }
+      }
+    } else if (input === ".") {
       if (
         text.endsWith(".") ||
-        endsWithSign(text) ||
+        endsWithOperator(text) ||
         _.isEmpty(text) ||
         hasDotAfterLastSign(text)
       )
@@ -95,24 +146,24 @@ export const HomeScreen = () => {
         }
         let finalText = text;
 
-        if (endsWithSign(text)) finalText = removeLastChar(text);
+        if (endsWithOperator(text)) finalText = removeLastChar(text);
 
         const result = calculateResult(finalText).toString();
 
         setText(result);
       }
-    } else if (isSign(input)) {
+    } else if (isOperator(input)) {
       const textString = text.toString();
-      if (!endsWithSign(textString) && !_.isEmpty(textString))
+      if (!endsWithOperator(textString) && !_.isEmpty(textString))
         setText(textString.concat(input));
     } else {
       if (!_.isString(text)) {
         setText(input);
       } else {
-        if (endsWithSignAndZero(text) && input === "0") return;
+        if (endsWithOperatorAndZero(text) && input === "0") return;
         if (text === "0") return;
         const numbers = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
-        if (endsWithSignAndZero(text) && numbers.includes(input)) {
+        if (endsWithOperatorAndZero(text) && numbers.includes(input)) {
           setText(replaceLastSymbolWith(text, input));
           return;
         }
@@ -141,6 +192,7 @@ export const HomeScreen = () => {
       <Button title="=" onPress={() => onButtonClick("=")} />
       <Button title="C" onPress={() => onButtonClick("C")} />
       <Button title="." onPress={() => onButtonClick(".")} />
+      <Button title="()" onPress={() => onButtonClick("()")} />
       <Icon.Button
         name="delete"
         onPress={() => {
