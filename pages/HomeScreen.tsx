@@ -1,7 +1,7 @@
 import { Button } from "react-native";
 import { CalculatorDisplay } from "../components/CalculatorDisplay";
 import { useState } from "react";
-import _ from "lodash";
+import _, { endsWith } from "lodash";
 import { Snackbar } from "react-native-paper";
 import Icon from "react-native-vector-icons/Feather";
 
@@ -20,6 +20,10 @@ export const HomeScreen = () => {
     text: string;
     isVisible: boolean;
   }>({ text: "", isVisible: false });
+
+  const displayError = (message: string) => {
+    setSnackbarState({isVisible: true, text: message})
+  }
 
   const calculateResult = (text: string): string => {
     return eval(text);
@@ -65,7 +69,7 @@ export const HomeScreen = () => {
     return typeof val === "string" && signs.includes(val);
   };
 
-  const replaceLastSymbolWith = (text: string, val: string): string => {
+  const replaceLastCharWith = (text: string, val: string): string => {
     const withoutLastChar = removeLastChar(text);
     return withoutLastChar.concat(val);
   };
@@ -120,8 +124,10 @@ export const HomeScreen = () => {
 
   const onButtonClick = (input: string) => {
     if (input === "()") {
-      if(_.isEmpty(text)) return
-      if (endsWithSignAndOpenBracket(text)) return;
+      if(endsWithAnyDataArr(text, ['(-', '(+'])) {
+        setText(text.concat('1)'))
+      } else if(_.isEmpty(text)) return
+      else if (endsWithSignAndOpenBracket(text)) return;
       if (endsWithOperator(text)) {
         setText(text.concat("("));
       } else if (endsWithNumber(text)) {
@@ -148,16 +154,21 @@ export const HomeScreen = () => {
     } else if (input === "=") {
       if (!_.isEmpty(text)) {
         if (_.isEqual(text, "0/0")) {
-          setSnackbarState({ isVisible: true, text: "Invalid operation" });
+          displayError("Invalid operation")
           return;
         }
         if (text.endsWith("/0")) {
-          setSnackbarState({ isVisible: true, text: "Cannot divide by zero" });
+          displayError('Cannot divide by zero')
           return;
+        }
+        if(endsWithAnyDataArr(text, ['(+', '(-'])) {
+          displayError('Invalid format used')
+          return
         }
         let finalText = text;
 
-        if (endsWithOperator(text)) finalText = removeLastChar(text);
+        
+        if (endsWithOperator(finalText)) finalText = removeLastChar(text);
 
         finalText = closeBrackets(finalText)
 
@@ -167,8 +178,17 @@ export const HomeScreen = () => {
       }
     } else if (isOperator(input)) {
       const textString = text.toString();
-      if (!endsWithOperator(textString) && !_.isEmpty(textString))
+      if(input === '-' || input === '+') {
+        if(endsWithAnyDataArr(textString, [...digits, '(', ')'])) {
+          setText(textString.concat(input))
+        } else if (endsWithAnyDataArr(textString, ['(+', '(-'])) {
+          setText(replaceLastCharWith(textString, input))
+        }
+      } else if(endsWithOperator(textString) && !endsWithAnyDataArr(textString, ['(+', '(- '])) {
+        setText(replaceLastCharWith(text, input))
+      } else if (!endsWithOperator(textString) && !_.isEmpty(textString)){
         setText(textString.concat(input));
+      }
     } else {
       if (!_.isString(text)) {
         setText(input);
@@ -177,7 +197,7 @@ export const HomeScreen = () => {
         if (text === "0") return;
         const numbers = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
         if (endsWithOperatorAndZero(text) && numbers.includes(input)) {
-          setText(replaceLastSymbolWith(text, input));
+          setText(replaceLastCharWith(text, input));
           return;
         }
         setText(text.concat(input));
