@@ -153,14 +153,6 @@ export const HomeScreen = () => {
       setText("");
     } else if (input === "=") {
       if (!_.isEmpty(text)) {
-        if (_.isEqual(text, "0/0")) {
-          displayError("Invalid operation")
-          return;
-        }
-        if (text.endsWith("/0")) {
-          displayError('Cannot divide by zero')
-          return;
-        }
         if(endsWithAnyDataArr(text, ['(+', '(-'])) {
           displayError('Invalid format used')
           return
@@ -173,7 +165,19 @@ export const HomeScreen = () => {
         finalText = closeBrackets(finalText)
 
         const result = calculateResult(finalText).toString();
-
+        
+        const InfinityEval = eval('1/0').toString()
+        const NaNEval = eval('0/0').toString()
+        
+        if (_.isEqual(result, NaNEval)) {
+          displayError("Invalid operation")
+          return;
+        }
+        if (_.isEqual(result, InfinityEval)) {
+          displayError('Cannot divide by zero')
+          return;
+        }
+        
         setText(result);
       }
     } else if (isOperator(input)) {
