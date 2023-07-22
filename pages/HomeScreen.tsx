@@ -112,14 +112,15 @@ export const HomeScreen = () => {
     return text.concat(')'.repeat(difference))
   };
 
-  const numbers = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
+  const digits = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"];
 
   const endsWithAnyDataArr = (text: string, dataArr: string[]): boolean => {
-    return dataArr.some(text.endsWith);
+    return dataArr.some(data => text.endsWith(data));
   };
 
   const onButtonClick = (input: string) => {
     if (input === "()") {
+      if(_.isEmpty(text)) return
       if (endsWithSignAndOpenBracket(text)) return;
       if (endsWithOperator(text)) {
         setText(text.concat("("));
@@ -137,7 +138,7 @@ export const HomeScreen = () => {
         }
       }
     } else if (input === ".") {
-      if(endsWithAnyDataArr(text, numbers) && !hasDotAfterLastSign(text)) {
+      if(endsWithAnyDataArr(text, digits) && !hasDotAfterLastSign(text)) {
         setText(text.concat(input))
       }
     } else if (input === "delete") {
