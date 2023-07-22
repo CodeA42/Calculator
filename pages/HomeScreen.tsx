@@ -89,11 +89,16 @@ export const HomeScreen = () => {
     return text.split(val).length - 1;
   };
 
-  const hasOpenBracket = (text: string): boolean => {
-    const numberOfOpenBrackets = countOccurencesOfSubstring(text, "(");
-    const numberOfClosedBrackets = countOccurencesOfSubstring(text, ")");
+  const countOpenBrackets = (text: string) => {
+    return countOccurencesOfSubstring(text, "(");
+  }
 
-    return numberOfOpenBrackets > numberOfClosedBrackets;
+  const countClosedBrackets = (text: string) => {
+    return countOccurencesOfSubstring(text, ")")
+  }
+
+  const hasOpenBracket = (text: string): boolean => {
+    return countOpenBrackets(text) > countClosedBrackets(text);
   };
 
   const endsWithNumber = (text: string): boolean => {
@@ -101,7 +106,17 @@ export const HomeScreen = () => {
     return text.endsWith(lastText);
   };
 
-  const closeBrackets = (text: string): string => {};
+  const closeBrackets = (text: string): string => {
+    const difference = countOpenBrackets(text) - countClosedBrackets(text)
+
+    return text.concat(')'.repeat(difference))
+  };
+
+  const numbers = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
+
+  const endsWithAnyDataArr = (text: string, dataArr: string[]): boolean => {
+    return dataArr.some(text.endsWith);
+  };
 
   const onButtonClick = (input: string) => {
     if (input === "()") {
@@ -122,14 +137,9 @@ export const HomeScreen = () => {
         }
       }
     } else if (input === ".") {
-      if (
-        text.endsWith(".") ||
-        endsWithOperator(text) ||
-        _.isEmpty(text) ||
-        hasDotAfterLastSign(text)
-      )
-        return;
-      setText(text.concat(input));
+      if(endsWithAnyDataArr(text, numbers) && !hasDotAfterLastSign(text)) {
+        setText(text.concat(input))
+      }
     } else if (input === "delete") {
       if (text.length > 0) setText(removeLastChar(text));
     } else if (input === "C") {
@@ -147,6 +157,8 @@ export const HomeScreen = () => {
         let finalText = text;
 
         if (endsWithOperator(text)) finalText = removeLastChar(text);
+
+        finalText = closeBrackets(finalText)
 
         const result = calculateResult(finalText).toString();
 
