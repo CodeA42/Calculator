@@ -8,11 +8,62 @@ import Icon from "react-native-vector-icons/Feather";
 enum OperatorEnum {
   plus = "+",
   minus = "-",
-  divide = "*",
-  multiply = "/",
+  divide = "/",
+  multiply = "*",
+}
+
+enum Command {
+  plus = '+',
+  minus = '-',
+  divide = '/',
+  multiply = '*',
+  clear = 'clear',
+  delete = 'delete',
+  number = 'number',
+  changeSign = 'changeSign',
+  result = 'result',
+  bracket = 'bracket',
+  dot = 'dot'
+}
+
+enum Number {
+  one = '1',
+  two = '2',
+  three = '3',
+  four = '4',
+  five = '5',
+  six = '6',
+  seven = '7',
+  eight = '8',
+  nine = '9'
+}
+
+const isNumber = (val: any): val is Number => {
+  return typeof val === 'string' && Object.values<string>(Number).includes(val)
+}
+
+enum Digit {
+  zero = '0',
+  one = '1',
+  two = '2',
+  three = '3',
+  four = '4',
+  five = '5',
+  six = '6',
+  seven = '7',
+  eight = '8',
+  nine = '9'
+}
+
+const isDigit = (val: any): val is Digit => {
+  return typeof val === 'string' && Object.values<string>(Digit).includes(val)
 }
 
 type Operator = "/" | "*" | "-" | "+";
+
+const isOperator = (val: any): val is Operator => {
+  return typeof val === "string" && Object.values<string>(OperatorEnum);.includes(val);
+};
 
 export const HomeScreen = () => {
   const [text, setText] = useState("");
@@ -123,7 +174,7 @@ export const HomeScreen = () => {
   };
 
   const onButtonClick = (input: string) => {
-    if (input === "()") {
+    if (input === Command.bracket) {
       if(endsWithAnyDataArr(text, ['(-', '(+'])) {
         setText(text.concat('1)'))
       } else if(_.isEmpty(text)) return
@@ -143,15 +194,15 @@ export const HomeScreen = () => {
           return;
         }
       }
-    } else if (input === ".") {
+    } else if (input === Command.dot) {
       if(endsWithAnyDataArr(text, digits) && !hasDotAfterLastSign(text)) {
-        setText(text.concat(input))
+        setText(text.concat('.'))
       }
-    } else if (input === "delete") {
+    } else if (input === Command.delete) {
       if (text.length > 0) setText(removeLastChar(text));
-    } else if (input === "C") {
+    } else if (input === Command.clear) {
       setText("");
-    } else if (input === "=") {
+    } else if (input === Command.result) {
       if (!_.isEmpty(text)) {
         if(endsWithAnyDataArr(text, ['(+', '(-'])) {
           displayError('Invalid format used')
@@ -222,18 +273,18 @@ export const HomeScreen = () => {
       <Button title="8" onPress={() => onButtonClick("8")} />
       <Button title="9" onPress={() => onButtonClick("9")} />
       <Button title="0" onPress={() => onButtonClick("0")} />
-      <Button title="+" onPress={() => onButtonClick("+")} />
-      <Button title="-" onPress={() => onButtonClick("-")} />
-      <Button title="*" onPress={() => onButtonClick("*")} />
-      <Button title="/" onPress={() => onButtonClick("/")} />
-      <Button title="=" onPress={() => onButtonClick("=")} />
-      <Button title="C" onPress={() => onButtonClick("C")} />
-      <Button title="." onPress={() => onButtonClick(".")} />
-      <Button title="()" onPress={() => onButtonClick("()")} />
+      <Button title="+" onPress={() => onButtonClick(Command.plus)} />
+      <Button title="-" onPress={() => onButtonClick(Command.minus)} />
+      <Button title="*" onPress={() => onButtonClick(Command.multiply)} />
+      <Button title="/" onPress={() => onButtonClick(Command.delete)} />
+      <Button title="=" onPress={() => onButtonClick(Command.result)} />
+      <Button title="C" onPress={() => onButtonClick(Command.clear)} />
+      <Button title="." onPress={() => onButtonClick(Command.dot)} />
+      <Button title="()" onPress={() => onButtonClick(Command.bracket)} />
       <Icon.Button
         name="delete"
         onPress={() => {
-          onButtonClick("delete");
+          onButtonClick(Command.delete);
         }}
       ></Icon.Button>
       <Snackbar
